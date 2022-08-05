@@ -18,3 +18,10 @@ type bbb = Extract<"a" | "b" | "c", "a" | "d">;
 
 type classmate = Omit<myType, "stuNo">;
 
+type myGetParam<func extends Function> = func extends (...args: infer Args) => unknown ? Args : never;
+
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+type addParamType = myGetParam<typeof add>;
