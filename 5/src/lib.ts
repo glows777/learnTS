@@ -97,3 +97,86 @@ type obj = {
 };
 
 type test2 = deepReadOnly<obj>;
+
+// 实现加减乘除
+type BuildArray<
+  Length extends number,
+  Ele = unknown,
+  Arr extends unknown[] = []
+> = Arr["length"] extends Length ? Arr : BuildArray<Length, Ele, [...Arr, Ele]>;
+
+// 加
+type add<num1 extends number, num2 extends number> = [
+  ...BuildArray<num1>,
+  ...BuildArray<num2>
+]["length"];
+
+type testAdd = add<1, 2>;
+
+// 减
+type subTract<
+  num1 extends number,
+  num2 extends number
+> = BuildArray<num1> extends [...Arr1: BuildArray<num2>, ...Arr2: infer Rest]
+  ? Rest["length"]
+  : never;
+type subTractTest = subTract<3, 2>;
+
+// 乘
+type multiply<
+  num1 extends number,
+  num2 extends number,
+  result extends unknown[] = []
+> = num2 extends 0
+  ? result["length"]
+  : multiply<num1, subTract<num2, 1>, [...BuildArray<num1>, ...result]>;
+type testMultiply = multiply<2, 3>;
+
+// 除
+type divide<
+  num1 extends number,
+  num2 extends number,
+  result extends unknown[] = []
+> = num1 extends 0
+  ? result["length"]
+  : divide<subTract<num1, num2>, num2, [unknown, ...result]>;
+type testDivide = divide<12, 3>;
+
+// 实现类型的strLen
+type myStrLen<
+  str extends string,
+  countArr extends unknown[] = []
+> = str extends `${string}${infer Rest}`
+  ? myStrLen<Rest, [unknown, ...countArr]>
+  : countArr["length"];
+type testStrLen = myStrLen<"hello">;
+
+// 类型的比较大小
+type myCompare<
+  num1 extends number,
+  num2 extends number,
+  arr extends unknown[] = []
+> = num1 extends num2
+  ? false
+  : arr["length"] extends num2
+  ? true
+  : arr["length"] extends num1
+  ? false
+  : myCompare<num1, num2, [unknown, ...arr]>;
+type testCompare = myCompare<1, 2>;
+
+// 实现类型的斐波那契数列
+type FibonacciLoop<
+  preArr extends unknown[],
+  currentArr extends unknown[],
+  indexArr extends unknown[],
+  num extends number = 1
+> = indexArr["length"] extends num
+  ? currentArr["length"]
+  : FibonacciLoop<
+      currentArr,
+      [...preArr, ...currentArr],
+      [...indexArr, unknown],
+      num
+    >;
+type testFib = FibonacciLoop<[1], [], [], 8>;
