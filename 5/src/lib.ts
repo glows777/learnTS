@@ -180,3 +180,22 @@ type FibonacciLoop<
       num
     >;
 type testFib = FibonacciLoop<[1], [], [], 8>;
+
+// 判断是否是联合类型
+type isUion<A, B = A> = A extends A ? ([B] extends [A] ? false : true) : never;
+type testUion = isUion<"a" | "b" | "c">;
+type testUion2 = isUion<["a" | "b" | "c"]>;
+// A extends A 这段看似没啥意义，主要是为了触发分布式条件类型，让 A 的每个类型单独传入。
+// [B] extends [A] 这样不直接写 B 就可以避免触发分布式条件类型，那么 B 就是整个联合类型。
+// B 是联合类型整体，而 A 是单个类型，自然不成立，而其它类型没有这种特殊处理，A 和 B 都是同一个，怎么判断都成立
+
+// 将返回联合类型的组合
+type Combination<A extends string, B extends string> =
+  | A
+  | B
+  | `${A}${B}`
+  | `${B}${A}`;
+type allCombination<A extends string, B extends string = A> = A extends A // 还是关键这句，触发分布式条件类型，让 A 的每个类型单独传入
+  ? Combination<A, allCombination<Exclude<B, A>>>
+  : never;
+type testCombination = allCombination<"a" | "b" | "c">;
