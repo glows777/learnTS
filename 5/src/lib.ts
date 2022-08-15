@@ -199,3 +199,47 @@ type allCombination<A extends string, B extends string = A> = A extends A // 还
   ? Combination<A, allCombination<Exclude<B, A>>>
   : never;
 type testCombination = allCombination<"a" | "b" | "c">;
+
+// 判断是不是any
+// any 类型与任何类型的交叉都是 any，也就是 1 & any 结果是 any，所以可以根据这个来判断是不是 any 类型
+type isAny<T> = "glows777" extends "WCG" & T ? true : false;
+type testIsAny = isAny<"glows777">;
+
+// 判断两个类型是不是相同的类型，是则返回false
+type NotEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <
+  T
+>() => T extends B ? 1 : 2
+  ? false
+  : true;
+  // 元组类型也是数组类型，但每个元素都是只读的，并且 length 是数字字面量，而数组的 length 是 number，所以，可以根据这个来判断是不是元组类型
+type isTuple<T> = T extends [...params: infer Arr]
+  ? NotEqual<T["length"], number>
+  : false;
+type testIsTuple = isTuple<[1, 2, 3]>;
+type testIsTuple2 = isTuple<number[]>;
+
+// 过滤出可选属性
+type getOptionnal<T extends Record<string, any>> = {
+  // 可选的意思是这个索引可能没有，没有的时候，那 Pick<T, K> 就是空的，所以 {} extends Pick<T, K> 就能过滤出可选索引。
+  [K in keyof T as {} extends Pick<T, K> ? K : never]: T[K];
+};
+type tmp = {
+  a: string;
+  b?: number | string;
+  [key: string]: any;
+};
+type testGetOptional = getOptionnal<tmp>;
+
+// 筛选出必须属性的索引并返回
+type isRequired<T, K extends keyof T> = {} extends Pick<T, K> ? never : K;
+// 过滤出必选属性
+type getRequire<T extends Record<string, any>> = {
+  [K in keyof T as isRequired<T, K>]: T[K];
+};
+type testIsRequired = getRequire<tmp>;
+
+// 过滤掉签名属性
+type removeIndexSignature<T extends Record<string, any>> = {
+  [K in keyof T as K extends `${infer Str}` ? Str : never]: T[K];
+};
+type testRemoveIndexSignature = removeIndexSignature<tmp>;
