@@ -211,7 +211,7 @@ type NotEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <
 >() => T extends B ? 1 : 2
   ? false
   : true;
-  // 元组类型也是数组类型，但每个元素都是只读的，并且 length 是数字字面量，而数组的 length 是 number，所以，可以根据这个来判断是不是元组类型
+// 元组类型也是数组类型，但每个元素都是只读的，并且 length 是数字字面量，而数组的 length 是 number，所以，可以根据这个来判断是不是元组类型
 type isTuple<T> = T extends [...params: infer Arr]
   ? NotEqual<T["length"], number>
   : false;
@@ -243,3 +243,37 @@ type removeIndexSignature<T extends Record<string, any>> = {
   [K in keyof T as K extends `${infer Str}` ? Str : never]: T[K];
 };
 type testRemoveIndexSignature = removeIndexSignature<tmp>;
+
+
+// 做一个提取"a=1&a=2&b=2&c=3"为{a: [1, 2], b: 2, c: 3}的类型
+// 这个是用于合并两个值的，如果是一样的，则返回一个，不一样则返回数组
+type mergeValue<One, Other> = One extends Other
+  ? One
+  : Other extends unknown[]
+  ? [One, ...Other]
+  : [One, Other];
+// 用于合并两个{...}，如果是一样的key，则要进行合并这个key的值，不一样的key则直接返回
+type mergeParam<
+  One extends Record<string, any>,
+  Other extends Record<string, any>
+> = {
+  [K in keyof One | keyof Other]: K extends keyof One
+    ? K extends keyof Other
+      ? mergeValue<One[K], Other[K]>
+      : One[K]
+    : K extends keyof Other
+    ? Other[K]
+    : never;
+};
+// 用于解析参数并返回{...}
+type parseParam<Str extends string> = Str extends `${infer Key}=${infer Value}`
+  ? {
+      [K in Key]: Value;
+    }
+  : {};
+// 递归处理，每一次返回来，在合并
+type parseQueryString<T extends string> =
+  T extends `${infer param}&${infer Rest}`
+    ? mergeParam<parseParam<param>, parseQueryString<Rest>>
+    : parseParam<T>;
+type res = parseQueryString<"a=1&a=2&b=2&c=3">;
