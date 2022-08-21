@@ -10,16 +10,19 @@ type NamesSpace = JoinStrArray<Names, " "> // "Sem Lolo Kaquko"
 type NamesStars = JoinStrArray<Names, "⭐️"> // "Sem⭐️Lolo⭐️Kaquko"
  */
 
-type JoinStrArray<Arr extends string[], Separator extends string, Result extends string = ""> = 
-    Arr extends [infer F, ...infer R]
-        ? F extends string
-            ? R extends string[]
-                ? Result extends ""
-                    ? JoinStrArray<R, Separator, F>
-                    : JoinStrArray<R, Separator, `${Result}${Separator}${F}`>
-                : Result
-            : Result
-        : Result
+type JoinStrArray<
+  Arr extends string[],
+  Separator extends string,
+  Result extends string = ""
+> = Arr extends [infer F, ...infer R]
+  ? F extends string
+    ? R extends string[]
+      ? Result extends ""
+        ? JoinStrArray<R, Separator, F>
+        : JoinStrArray<R, Separator, `${Result}${Separator}${F}`>
+      : Result
+    : Result
+  : Result;
 
-type names = ['a', 'b', 'c']
-type nameComma = JoinStrArray<names, '&'>
+type names = ["a", "b", "c"];
+type nameComma = JoinStrArray<names, "&">;
