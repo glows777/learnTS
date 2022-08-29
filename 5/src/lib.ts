@@ -221,6 +221,7 @@ type testIsTuple2 = isTuple<number[]>;
 // 过滤出可选属性
 type getOptionnal<T extends Record<string, any>> = {
   // 可选的意思是这个索引可能没有，没有的时候，那 Pick<T, K> 就是空的，所以 {} extends Pick<T, K> 就能过滤出可选索引。
+  // 可选的意思是指有没有这个索引，而不是索引值是不是可能 undefined
   [K in keyof T as {} extends Pick<T, K> ? K : never]: T[K];
 };
 type tmp = {
