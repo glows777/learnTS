@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-02-01 17:52:20
+ * @LastEditTime: 2023-02-01 18:09:16
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
