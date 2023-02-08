@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-02-01 18:09:16
+ * @LastEditTime: 2023-02-08 17:45:53
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -102,40 +102,87 @@ type JoinStrArray<
 > = Arr extends [infer F extends string, ...infer Rest extends string[]]
   ? JoinStrArray<Rest, Sep, R extends "" ? `${F}` : `${R}${Sep}${F}`>
   : R;
-  type Names = ["Sem", "Lolo", "Kaquko"]
-  type NamesComma = JoinStrArray<Names, ","> // "Sem,Lolo,Kaquko"
-  type NamesSpace = JoinStrArray<Names, " "> // "Sem Lolo Kaquko"
-  type NamesStars = JoinStrArray<Names, "⭐️"> // "Sem⭐️Lolo⭐️Kaquko"
+type Names = ["Sem", "Lolo", "Kaquko"];
+type NamesComma = JoinStrArray<Names, ",">; // "Sem,Lolo,Kaquko"
+type NamesSpace = JoinStrArray<Names, " ">; // "Sem Lolo Kaquko"
+type NamesStars = JoinStrArray<Names, "⭐️">; // "Sem⭐️Lolo⭐️Kaquko"
 
-  // ? 10
-  type TrimLeft<V extends string> = V extends ` ${infer R}` ? TrimLeft<R> : V
-  type TrimRight<V extends string> = V extends `${infer R} ` ? TrimRight<R> : V
-  type Trim<V extends string> = TrimLeft<TrimRight<V>>
-  type trimTest = Trim<' hello       '>
+// ? 10
+type TrimLeft<V extends string> = V extends ` ${infer R}` ? TrimLeft<R> : V;
+type TrimRight<V extends string> = V extends `${infer R} ` ? TrimRight<R> : V;
+type Trim<V extends string> = TrimLeft<TrimRight<V>>;
+type trimTest = Trim<" hello       ">;
 
-  // ? 11
-  type IsEqual<A, B> = A extends B ? (B extends A ? true : false) : false // 防止有一个是any
-  // 测试用例
+// ? 11
+type IsEqual<A, B> = A extends B ? (B extends A ? true : false) : false; // 防止有一个是any
+// 测试用例
 type E0 = IsEqual<1, 2>; // false
 type E1 = IsEqual<{ a: 1 }, { a: 1 }>; // true
 type E2 = IsEqual<[1], []>; // false
-type E3 = IsEqual<{ a: 1, b: 2 }, { a: 1 }>; // false
-type E4 = IsEqual<{ a: 1 }, { a: 1, b: 2 }>; // false
+type E3 = IsEqual<{ a: 1; b: 2 }, { a: 1 }>; // false
+type E4 = IsEqual<{ a: 1 }, { a: 1; b: 2 }>; // false
 
 // ? 12
-type Head<T extends Array<any>> = T extends [infer F, ...infer R] ? F : never
-type H0 = Head<[]>
-type H1 = Head<[1]>
-type H2 = Head<[2, 3]>
+type Head<T extends Array<any>> = T extends [infer F, ...infer R] ? F : never;
+type H0 = Head<[]>;
+type H1 = Head<[1]>;
+type H2 = Head<[2, 3]>;
 
 // ? 13
 // 同理12
 
 // ? 14
-type Unshift<T extends any[], E> = [E, ...T]
-type Arr0 = Unshift<[], 1>
-type Arr1 = Unshift<[1, 2, 3], 0>
+type Unshift<T extends any[], E> = [E, ...T];
+type Arr0 = Unshift<[], 1>;
+type Arr1 = Unshift<[1, 2, 3], 0>;
 
 // ? 15 16 同理14
 
 // ? 17
+type Includes<T extends Array<any>, E> = T extends [infer F, ...infer R]
+  ? F extends E
+    ? true
+    : Includes<R, E>
+  : false;
+type I0 = Includes<[], 1>; // false
+type I1 = Includes<[2, 2, 3, 1], 2>; // true
+type I2 = Includes<[2, 3, 3, 1], 1>; // true
+
+// ? 18 利用函数参数逆变
+type UnionToIntersection<U> = (
+  U extends any ? (arg: U) => any : never
+) extends (arg: infer T) => any
+  ? T
+  : never;
+type U0 = UnionToIntersection<string | number>; // never
+type U1 = UnionToIntersection<{ name: string } | { age: number }>; // { name: string; } & { age: number; }
+
+// ? 19
+type OptionalKeys<T extends Record<string, any>> = Exclude<
+  {
+    [K in keyof T]: undefined extends T[K] ? K : never;
+  }[keyof T],
+  undefined
+>;
+type Person = {
+  id: string;
+  name: string;
+  age: number;
+  from?: string;
+  speak?: string;
+};
+type PersonOptionalKeys = OptionalKeys<Person>; // "from" | "speak"
+
+// ? 20
+type Curry<
+  F extends (...args: any[]) => any,
+  P extends any[] = Parameters<F>,
+  R = ReturnType<F>
+> = P extends [infer First, ...infer Rest]
+  ? Rest extends []
+    ? (arg: First) => R
+    : (arg: First) => Curry<(...args: Rest) => R>
+  : R;
+type F0 = Curry<() => Date>; // () => Date
+type F1 = Curry<(a: number) => Date>; // (arg: number) => Date
+type F2 = Curry<(a: number, b: string) => Date>; //  (arg_0: number) => (b: string) => Date
