@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-02-08 17:45:53
+ * @LastEditTime: 2023-03-02 21:20:25
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -148,10 +148,11 @@ type I0 = Includes<[], 1>; // false
 type I1 = Includes<[2, 2, 3, 1], 2>; // true
 type I2 = Includes<[2, 3, 3, 1], 1>; // true
 
-// ? 18 利用函数参数逆变
-type UnionToIntersection<U> = (
-  U extends any ? (arg: U) => any : never
-) extends (arg: infer T) => any
+// ? 18 利用函数参数逆变 + 函数重载
+type UnionToIntersection<U> = ( U extends any 
+  ? (arg: U) => any 
+  : never
+  ) extends (arg: infer T) => any
   ? T
   : never;
 type U0 = UnionToIntersection<string | number>; // never
@@ -186,3 +187,102 @@ type Curry<
 type F0 = Curry<() => Date>; // () => Date
 type F1 = Curry<(a: number) => Date>; // (arg: number) => Date
 type F2 = Curry<(a: number, b: string) => Date>; //  (arg_0: number) => (b: string) => Date
+
+
+// ? 21
+type Merge<First, Second> = {
+  [K in keyof (First & Second)]: K extends keyof Second 
+  ? Second[K]
+  : K extends keyof First
+    ? First[K]
+    : never
+}
+type Foo2 = {
+  a: number;
+  b: string;
+};
+
+type Bar2 = {
+  b: number;
+};
+const ab: Merge<Foo2, Bar2> = {a: 1, b: 2}
+
+// ? 22
+type Responder = {
+  text?: () => string;
+  json?: () => string;
+  secure?: boolean;
+};
+type RequireAtLeastOne<
+   ObjectType,
+   KeysType extends keyof ObjectType = keyof ObjectType,
+> = KeysType extends any 
+  ? Omit<ObjectType, KeysType> & Required<Pick<ObjectType, KeysType>>
+  : never 
+const responder: RequireAtLeastOne<Responder, 'text' | 'json'> = {
+  json: () => '{"message": "ok"}',
+  secure: true
+};
+
+// ? 23
+type RemoveIndexSignature<T> = {
+  [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K ]: T[K]
+}
+interface Foo3 {
+  [key: string]: any;
+  [key: number]: any;
+  bar(): void;
+}
+type FooWithOnlyBar = RemoveIndexSignature<Foo3>; //{ bar: () => void; }
+
+// ? 24
+type Foo4 = {
+  readonly a: number;
+  readonly b: string;
+  readonly c: boolean;
+};
+
+type Mutable<T, Keys extends keyof T = keyof T> = { -readonly[K in Keys]: T[K] } & Omit<T, Keys>
+const mutableFoo: Mutable<Foo4, 'a'> = { a: 1, b: '2', c: true };
+
+mutableFoo.a = 3; // OK
+// mutableFoo.b = '6'; // Cannot assign to 'b' because it is a read-only property.
+
+// ? 25
+type IsUnion<T, U = T> = T extends any ? ([U] extends [T] ? false : true) : never
+
+type I02 = IsUnion<string|number> // true
+type I12 = IsUnion<string|never> // false
+type I22 =IsUnion<string|unknown> // false
+
+// ? 26
+type IsNever<T> = [T] extends [never] ? true : false
+type I03 = IsNever<never> // true
+type I13 = IsNever<never | string> // false
+type I23 = IsNever<null> // false
+
+// ? 27
+type Reverse<
+  T extends Array<any>,
+  R extends Array<any> = []
+> = T extends [...infer Firsts, infer Last]
+  ? Reverse<Firsts, [...R, Last]>
+  : R
+
+type R0 = Reverse<[]> // []
+type R1 = Reverse<[1, 2, 3]> // [3, 2, 1]
+
+// ? 28
+type Item = 'semlinker,lolo,kakuqo';
+
+type Split<
+	S extends string, 
+	Delimiter extends string,
+> = S extends `${infer PreStr}${Delimiter}${infer NextStr}`
+  ? [PreStr, ...Split<NextStr, Delimiter>]
+  : [S]
+type ElementType = Split<Item, ','>; // ["semlinker", "lolo", "kakuqo"]
+
+
+
+
