@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-03-03 15:30:34
+ * @LastEditTime: 2023-03-04 19:06:57
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -325,6 +325,53 @@ type ResultType = typeof result
 //   }
 // }
 
+// ? 31
+type Repeat<T, C extends number, R extends Array<any> = []> = R['length'] extends C 
+  ? R
+  : Repeat<T, C, [...R, T]>
 
+type R02 = Repeat<0, 0>; // []
+type R12 = Repeat<1, 1>; // [1]
+type R22 = Repeat<number, 2>; // [number, number]
 
+// ? 32
+type RepeatString<
+  T extends string,
+  C extends number,
+  R extends Array<any> = [],
+  Str extends string = ''
+> = R['length'] extends C
+  ? Str
+  : RepeatString<`${T}`, C, [...R, T], `${Str}${T}`>
 
+type S0 = RepeatString<"a", 0>; // ''
+type S1 = RepeatString<"a", 2>; // 'aa'
+type S2 = RepeatString<"ab", 3>; // 'ababab'
+
+// ? 33
+type ToNumber<T extends string, R extends any[] = []> = `${R['length']}` extends T 
+  ? R['length']
+  : ToNumber<T, [...R, T]>
+
+type T0 = ToNumber<"0">; // 0
+type T1 = ToNumber<"10">; // 10
+type T2 = ToNumber<"20">; // 20
+
+// ? 34
+type SmallerThan<
+  N extends number,
+  M extends number,
+  R extends Array<any> = []
+> = R['length'] extends N
+  ? R['length'] extends M
+    ? false
+    : true
+  : R['length'] extends M
+    ? false
+    : SmallerThan<N, M, [...R, 1]>
+
+type S02 = SmallerThan<0, 1>; // true
+type S12 = SmallerThan<2, 0>; // false
+type S22 = SmallerThan<8, 10>; // true
+
+// ? 35
