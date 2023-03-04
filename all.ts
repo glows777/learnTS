@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-03-02 21:20:25
+ * @LastEditTime: 2023-03-03 15:30:34
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -282,6 +282,48 @@ type Split<
   ? [PreStr, ...Split<NextStr, Delimiter>]
   : [S]
 type ElementType = Split<Item, ','>; // ["semlinker", "lolo", "kakuqo"]
+
+// ? 29
+type indexSignature<T> = T extends `${infer Pre}[${infer Mid}]${infer Rest}`
+  ? [Pre, Mid, ...indexSignature<Rest>]
+  : T extends `${infer Pre}[${infer Mid}]`
+    ?[Pre, Mid]
+    : [T]
+type removeSpace<T> = T extends [infer F, ...infer Rest]
+  ? F extends ''
+    ? [...removeSpace<Rest>]
+    : [F, ...removeSpace<Rest>]
+  : T
+type ToPath<S extends string> = S extends `${infer Pre}.${infer Rest}`
+  ? [...removeSpace<indexSignature<Pre>>, ...ToPath<Rest>]
+  : [...indexSignature<S>]
+
+type t1 = ToPath<'foo.bar.baz'> //=> ['foo', 'bar', 'baz']
+type t2 = ToPath<'foo[0].bar.baz'> //=> ['foo', '0', 'bar', 'baz']
+
+// ? 30
+declare const config: Chainable
+
+type Chainable<T = {}> = {
+  option<K extends string, V extends any>(key: K, value: V): Chainable<T & Record<K, V>>
+  get(): { [K in keyof T]: T[K] }
+}
+
+const result = config
+  .option('age', 7)
+  .option('name', 'lolo')
+  .option('address', { value: 'XiaMen' })
+  .get()
+
+type ResultType = typeof result  
+// 期望 ResultType 的类型是：
+// {
+//   age: number
+//   name: string
+//   address: {
+//     value: string
+//   }
+// }
 
 
 
