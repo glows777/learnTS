@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-03-04 19:06:57
+ * @LastEditTime: 2023-03-05 20:08:03
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -375,3 +375,25 @@ type S12 = SmallerThan<2, 0>; // false
 type S22 = SmallerThan<8, 10>; // true
 
 // ? 35
+type GenerateArray<T extends number, R extends any[] = []> = R['length'] extends T 
+  ? R
+  : GenerateArray<T, [...R, T]>
+type Add<T extends number, R extends number> = [...GenerateArray<T>, ...GenerateArray<R>]['length']
+
+type A0 = Add<5, 5>; // 10
+type A1 = Add<8, 20> // 28
+type A2 = Add<10, 30>; // 40
+
+// ? 36
+type IsAny<T> = 1 extends (0 & T) ? true : false
+type Filter<T extends any[], F> = T extends [infer First, ...infer Rest]
+  ? IsAny<First> extends true
+    ? [First, ...Filter<Rest, F>]
+    : [...First extends F ? [First] : [], ...Filter<Rest, F>]
+  : [] 
+
+type F02 = Filter<[6, "lolo", 7, "semlinker", false], number>; // [6, 7]
+type F12 = Filter<["kakuqo", 2, ["ts"], "lolo"], string>; // ["kakuqo", "lolo"]
+type F22 = Filter<[0, true, any, "abao"], string>; // [any, "abao"]
+
+// ? 37
