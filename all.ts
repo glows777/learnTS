@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-03-05 20:08:03
+ * @LastEditTime: 2023-03-07 15:12:44
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -389,7 +389,7 @@ type IsAny<T> = 1 extends (0 & T) ? true : false
 type Filter<T extends any[], F> = T extends [infer First, ...infer Rest]
   ? IsAny<First> extends true
     ? [First, ...Filter<Rest, F>]
-    : [...First extends F ? [First] : [], ...Filter<Rest, F>]
+    : [...(First extends F ? [First] : []), ...Filter<Rest, F>]
   : [] 
 
 type F02 = Filter<[6, "lolo", 7, "semlinker", false], number>; // [6, 7]
@@ -397,3 +397,72 @@ type F12 = Filter<["kakuqo", 2, ["ts"], "lolo"], string>; // ["kakuqo", "lolo"]
 type F22 = Filter<[0, true, any, "abao"], string>; // [any, "abao"]
 
 // ? 37
+type Flat<T extends any[]> = T extends [infer F, ...infer Rest] 
+  ? F extends Array<any>
+    ? [...Flat<F>, ...Flat<Rest>]
+    : [F, ...Flat<Rest>]
+  : []
+
+type F03 = Flat<[]> // []
+type F13 = Flat<['a', 'b', 'c']> // ["a", "b", "c"]
+type F23 = Flat<['a', ['b', 'c'], ['d', ['e', ['f']]]]> // ["a", "b", "c", "d", "e", "f"]
+
+// ? 38
+type StartsWith<T extends string, U extends string> = T extends `${U}${infer Rest}` 
+  ? true
+  : false
+type EndsWith<T extends string, U extends string> = T extends `${infer Rest}${U}` 
+  ? true
+  : false
+type E02 = EndsWith<'123', '23'> // true
+type E12 = EndsWith<'123', '13'> // false
+type E22 = EndsWith<'123', '123'> // true
+type S03 = StartsWith<'123', '12'> // true
+type S13 = StartsWith<'123', '13'> // false
+type S23 = StartsWith<'123', '1234'> // false 
+
+// ? 39
+type IsAny2<T> = 1 extends ( 0 & T) ? true : false
+
+type I04 = IsAny2<never> // false
+type I14 = IsAny2<unknown> // false
+type I24 = IsAny2<any> // true
+
+// ? 40
+type Flasy = 0 | "" | false | []
+type NotEmptyObject<T> = T extends {} ? ({} extends T ? false : true) : true
+type AnyOf<T extends any[]> = T extends [infer F, ...infer Rest]
+  ? F extends Flasy
+    ? AnyOf<Rest>
+    : NotEmptyObject<F>
+  : false
+type A02 = AnyOf<[]>; // false
+type A12 = AnyOf<[0, '', false, [], {}]> // false
+type A22 = AnyOf<[1, "", false, [], {}]> // true
+
+// ? 41
+type Replace<
+  S extends string,
+  From extends string,
+  To extends string
+> = S extends `${infer Pre}${From}${infer Last}`
+  ? `${Pre}${To}${Last}`
+  : S
+type R03 = Replace<'', '', ''> // ''
+type R13 = Replace<'foobar', 'bar', 'foo'> // "foofoo"
+type R23 = Replace<'foobarbar', 'bar', 'foo'> // "foofoobar"
+type ReplaceAll<
+  S extends string,
+  From extends string,
+  To extends string
+> = S extends `${infer Pre}${From}${infer Last}`
+  ? `${Pre}${To}${ReplaceAll<Last, From, To>}`
+  : S
+type R04 = ReplaceAll<'', '', ''> // ''
+type R14 = ReplaceAll<'barfoo', 'bar', 'foo'> // "foofoo"
+type R24 = ReplaceAll<'foobarbar', 'bar', 'foo'> // "foofoofoo"
+type R34 = ReplaceAll<'foobarfoobar', 'ob', 'b'> // "fobarfobar"
+
+
+
+
