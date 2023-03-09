@@ -2,7 +2,7 @@
  * @Author: glows777 1914426389@qq.com
  * @Date: 2023-01-29 16:24:40
  * @LastEditors: glows777 1914426389@qq.com
- * @LastEditTime: 2023-03-07 15:12:44
+ * @LastEditTime: 2023-03-09 14:28:35
  * @FilePath: \learnTS\all.ts
  * @Description:
  *
@@ -463,6 +463,158 @@ type R14 = ReplaceAll<'barfoo', 'bar', 'foo'> // "foofoo"
 type R24 = ReplaceAll<'foobarbar', 'bar', 'foo'> // "foofoofoo"
 type R34 = ReplaceAll<'foobarfoobar', 'ob', 'b'> // "fobarfobar"
 
+// ? 42
+type IndexOf<A extends any[], Item, T extends Array<any> = []> = A extends [infer F, ...infer Rest]
+  ? F extends Item
+    ? T['length']
+    : IndexOf<Rest, Item, [...T, Item]>
+  : -1
 
+type Arr = [1, 2, 3, 4, 5]
+type I05 = IndexOf<Arr, 0> // -1
+type I15 = IndexOf<Arr, 1> // 0
+type I25 = IndexOf<Arr, 3> // 2
+
+// ? 43
+type Permutation<T, K=T> = [T] extends [never] 
+  ? [] 
+  : K extends K 
+    ? [K, ...Permutation<Exclude<T, K>>] 
+    : never
+// ["a", "b"] | ["b", "a"]
+type P0 = Permutation<'a' | 'b'>  // ['a', 'b'] | ['b' | 'a']
+// type P1 = ["a", "b", "c"] | ["a", "c", "b"] | ["b", "a", "c"] 
+// | ["b", "c", "a"] | ["c", "a", "b"] | ["c", "b", "a"]
+type P1 = Permutation<'a' | 'b' | 'c'> 
+
+// ? 44
+type Unpacked<T> = T extends Array<infer T1>
+  ? Unpacked<T1>
+  : T extends Promise<infer T2>
+    ? Unpacked<T2>
+    : T extends (...args) => infer T3
+      ? Unpacked<T3>
+      : T
+type T00 = Unpacked<string>;  // string
+type T01 = Unpacked<string[]>;  // string
+type T02 = Unpacked<() => string>;  // string
+type T03 = Unpacked<Promise<string>>;  // string
+type T04 = Unpacked<Unpacked<Promise<string>[]>>;  // string
+type T05 = Unpacked<any>;  // any
+type T06 = Unpacked<never>;  // never
+
+// ? 45
+type JsonifiedObject<T extends object> = {
+  [K in keyof T]: T[K] extends object
+    ? 'toJSON' extends keyof T[K]
+      ? T[K]['toJSON'] extends (...args) => infer R
+        ? R
+        : never
+      : T[K] extends (...args) => any
+        ? never
+        : JsonifiedObject<T[K]>
+    : T[K]
+}
+type MyObject = {
+  str: "literalstring",
+  fn: () => void,
+  date: Date,
+  customClass: MyClass,
+  obj: {
+    prop: "property",
+    clz: MyClass,
+    nested: { attr: Date }
+  },
+}
+
+declare class MyClass {
+  toJSON(): "MyClass";
+}
+/**
+ * type JsonifiedMyObject = {
+ *  str: "literalstring";
+ *  fn: never;
+ *  date: string;
+ *  customClass: "MyClass";
+ *  obj: JsonifiedObject<{
+ *    prop: "property";
+ *    clz: MyClass;
+ *    nested: {
+ *      attr: Date;
+ *    };
+ *   }>;
+ * }
+*/
+type JsonifiedMyObject = JsonifiedObject<MyObject>;
+declare let ex: JsonifiedMyObject;
+const z1: "MyClass" = ex.customClass;
+const z2: string = ex.obj.nested.attr;
+
+// ? 46
+interface Person2 {
+  name: string;
+  age?: number;
+  gender?: number;
+}
+
+type RequireAllOrNone<T, K extends keyof T> = Omit<T, K> & (Required<Pick<T, K>> | Partial<Record<K, never>>)
+                                              
+const p1: RequireAllOrNone<Person2, 'age' | 'gender'> = {
+  name: "lolo",
+};
+
+const p2: RequireAllOrNone<Person2, 'age' | 'gender'> = {
+  name: "lolo",
+  age: 7,
+  gender: 1
+};
+
+// ? 47
+interface Person3 {
+  name: string;
+  age?: number;
+  gender?: number;
+}
+
+// 只能包含Keys中唯一的一个Key
+type RequireExactlyOne<T, Keys extends keyof T, K extends keyof T = Keys> = Keys extends any 
+  ? Omit<T, Keys> & Required<Pick<T, Keys>> & Partial<Record<Exclude<K, Keys>, never>>
+  : never
+
+const p12: RequireExactlyOne<Person3, 'age' | 'gender'> = {
+  name: "lolo",
+  age: 7,
+};
+
+const p22: RequireExactlyOne<Person3, 'age' | 'gender'> = {
+  name: "lolo",
+  gender: 1
+};
+
+// Error
+const p3: RequireExactlyOne<Person3, 'age' | 'gender'> = {
+  name: "lolo",
+  age: 7,
+  // gender: 1
+};
+
+// ? 48
+type ConsistsOnlyOf<LongString extends string, Substring extends string> = LongString extends `${Substring}${infer Rest}`
+  ? ConsistsOnlyOf<Rest, Substring>
+  : LongString extends ''
+    ? true
+    : false
+type C0 = ConsistsOnlyOf<'aaa', 'a'> //=> true
+type C1 = ConsistsOnlyOf<'ababab', 'ab'> //=> true
+type C2 = ConsistsOnlyOf<'aBa', 'a'> //=> false
+type C3 = ConsistsOnlyOf<'', 'a'> //=> true
+
+// ? 49
+type UnionToArray<T> = UnionToIntersection<T extends any ? (args: T) => any : never> extends (args: infer R) => any
+    ? [...UnionToArray<Exclude<T, R>>, R]
+    : [];
+type A03 = UnionToArray<'aaa' | 'bbb' | 'ccc'> //=> ['aaa' , 'bbb' , 'ccc']
+type A13 = UnionToArray<1 | 2 | 3 > //=> [1, 2, 3]
+type A23 = UnionToArray<{type:'input'} | {type:'select',hasOptions:boolean}> //=> [{type:'input'} ,{type:'select',hasOptions:boolean}]
 
 
